@@ -25,13 +25,13 @@ public class ThirdPersonShooterController : MonoBehaviour
     [SerializeField] private Transform debugTransform;
     private bool allowInvoke = true;
 
-    [Header("==Rigs==")]
-    [SerializeField] private Rig[] rifleRigs;
+    private List<RigLayer> rigs;
     private float aimRigWeight;
 
     [Header("Weapon Equipped")]
     [SerializeField] private bool _isRifleEquipped;
     [SerializeField] private bool _isPistolEquipped;
+    [SerializeField] private PlayerGunSelector GunSelector;
 
     private ThirdPersonController thirdPersonController;
     private StarterAssetsInputs starterAssetsInputs;
@@ -44,6 +44,8 @@ public class ThirdPersonShooterController : MonoBehaviour
         starterAssetsInputs = GetComponent<StarterAssetsInputs>();
         thirdPersonController = GetComponent<ThirdPersonController>();
         _animator = GetComponent<Animator>();
+        rigs = GetComponent<RigBuilder>().layers;
+        GunSelector = GetComponent<PlayerGunSelector>();
     }
 
     private void Start()
@@ -55,15 +57,17 @@ public class ThirdPersonShooterController : MonoBehaviour
         else
             debugTransform.gameObject.SetActive(false);
 
-        spawnBulletPosition = GameObject.FindGameObjectWithTag("BulletSpawn").GetComponent<Transform>();
+        //spawnBulletPosition = GameObject.FindGameObjectWithTag("BulletSpawn").GetComponent<Transform>();
 
         if (_isRifleEquipped)
         {
             _animator.SetLayerWeight(0, 0f);
+            _animator.SetLayerWeight(1, 1f);
         }
         else
         {
             _animator.SetLayerWeight(1, 0f);
+            _animator.SetLayerWeight(0, 1f);
         }
     }
 
@@ -75,14 +79,14 @@ public class ThirdPersonShooterController : MonoBehaviour
 
         if (_isRifleEquipped)
         {
-            rifleRigs[0].weight = Mathf.Lerp(rifleRigs[0].weight, aimRigWeight, Time.deltaTime * 20f);
+            rigs[0].rig.weight = Mathf.Lerp(rigs[0].rig.weight, aimRigWeight, Time.deltaTime * 20f);
         }
 
         if (_isPistolEquipped)
         {
-            foreach(Rig currRig in rifleRigs)
+            foreach(RigLayer currRig in rigs)
             {
-                currRig.weight = 0f;
+                currRig.rig.weight = 0f;
             }
         }
     }
@@ -92,31 +96,49 @@ public class ThirdPersonShooterController : MonoBehaviour
         if (starterAssetsInputs.aim)
         {
             OnAimStarted();
-
-            if(_isRifleEquipped)
-                _animator.SetLayerWeight(2, Mathf.Lerp(_animator.GetLayerWeight(2), 1f, Time.deltaTime * 10f));
-            
-            if(_isPistolEquipped)
-                _animator.SetLayerWeight(3, Mathf.Lerp(_animator.GetLayerWeight(3), 1f, Time.deltaTime * 10f));
-
-            Vector3 worldAimTarget = mouseWorldPosition;
-            worldAimTarget.y = transform.position.y;
-            Vector3 aimDirection = (worldAimTarget - transform.position).normalized;
-
-            transform.forward = Vector3.Lerp(transform.forward, aimDirection, Time.deltaTime * 20f);
-
-            ShootFunction(mouseWorldPosition);
+            AnimatorAimLayer(true);
+            AimingFix(mouseWorldPosition);
+            //ShootFunction(mouseWorldPosition); **Old Shoot Function
+            if(starterAssetsInputs.shoot && GunSelector.ActiveGun != null)
+            {
+                GunSelector.ActiveGun.Shoot();
+            }
         }
         else
         {
             OnAimFinished();
+            AnimatorAimLayer(false);
+        }
+    }
 
+    private void AnimatorAimLayer(bool aimStart)
+    {
+        if (aimStart)
+        {
+            if (_isRifleEquipped)
+                _animator.SetLayerWeight(2, Mathf.Lerp(_animator.GetLayerWeight(2), 1f, Time.deltaTime * 10f));
+
+            if (_isPistolEquipped)
+                _animator.SetLayerWeight(3, Mathf.Lerp(_animator.GetLayerWeight(3), 1f, Time.deltaTime * 10f));
+        }
+        else
+        {
             if (_isRifleEquipped)
                 _animator.SetLayerWeight(2, Mathf.Lerp(_animator.GetLayerWeight(2), 0f, Time.deltaTime * 10f));
 
             if (_isPistolEquipped)
                 _animator.SetLayerWeight(3, Mathf.Lerp(_animator.GetLayerWeight(3), 0f, Time.deltaTime * 10f));
         }
+        
+    }
+
+    private void AimingFix(Vector3 mouseWorldPosition)
+    {
+        Vector3 worldAimTarget = mouseWorldPosition;
+        worldAimTarget.y = transform.position.y;
+        Vector3 aimDirection = (worldAimTarget - transform.position).normalized;
+
+        transform.forward = Vector3.Lerp(transform.forward, aimDirection, Time.deltaTime * 20f);
     }
 
     private Vector3 MouseWorldFunction()
