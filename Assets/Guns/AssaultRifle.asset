@@ -1,0 +1,30 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ba3c960a1193319458870d75702e3705, type: 3}
+  m_Name: AssaultRifle
+  m_EditorClassIdentifier: 
+  ImpactType: {fileID: 0}
+  Type: 1
+  Name: M4A1
+  ModelPrefab: {fileID: 6848486310131931240, guid: ab8862a504db49a4a99ecf2f8b1f6b43, type: 3}
+  SpawnPoint: {x: -0.0155, y: 0.0009, z: 0.1906}
+  SpawnRotation: {x: 0, y: 0, z: 0}
+  ShootConfig: {fileID: 11400000, guid: ec07a6e4fcd73d64b92c4231784f165c, type: 2}
+  TrailConfig: {fileID: 11400000, guid: 216b009354b20d94786279a9f6ffcdac, type: 2}
+  _targetAimPosition: {x: 0.2447, y: -0.0748, z: 0.0758}
+  _targetAimRotation: {x: 28.804243, y: 96.26172, z: 260.72723}
+  _hintAimPosition: {x: 0.001, y: -0.205, z: 0}
+  _hintAimRotation: {x: 0, y: 0, z: 0}
+  _targetIdlePosition: {x: 0.3143, y: -0.1192, z: 0.0711}
+  _targetIdleRotation: {x: 351.53195, y: 90.011734, z: 256.68594}
+  _hintIdlePosition: {x: -0.05, y: -0.664, z: -0.123}
+  _hintIdleRotation: {x: 0, y: 0, z: 0}

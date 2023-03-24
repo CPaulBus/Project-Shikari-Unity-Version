@@ -14,6 +14,7 @@ namespace StarterAssets
 		public bool sprint;
 		public bool aim;
 		public bool shoot;
+		public bool switchWeapon;
 
 		[Header("Movement Settings")]
 		public bool analogMovement;
@@ -55,6 +56,11 @@ namespace StarterAssets
 		{
 			ShootInput(value.isPressed);
 		}
+
+		public void OnSwitchWeapon(InputValue value)
+		{
+			SwitchWeaponInput(value.isPressed);
+		}
 #endif
 
 
@@ -88,12 +94,22 @@ namespace StarterAssets
 			shoot = newShootState;
 		}
 
+		public void SwitchWeaponInput(bool newShootState)
+		{
+			switchWeapon = newShootState;
+		}
+
 		private void OnApplicationFocus(bool hasFocus)
 		{
 			SetCursorState(cursorLocked);
 		}
 
-		private void SetCursorState(bool newState)
+        private void OnEnable()
+        {
+			SetCursorState(cursorLocked);
+		}
+
+        private void SetCursorState(bool newState)
 		{
 			Cursor.lockState = newState ? CursorLockMode.Locked : CursorLockMode.None;
 		}

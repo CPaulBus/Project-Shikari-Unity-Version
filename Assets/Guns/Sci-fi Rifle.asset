@@ -14,9 +14,17 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ImpactType: {fileID: 0}
   Type: 2
-  Name: Sci
+  Name: 1
   ModelPrefab: {fileID: 2521480030240537659, guid: f8f55634c532618409108355c5bcb704, type: 3}
-  SpawnPoint: {x: 0.263, y: -0.04, z: 0.021}
-  SpawnRotation: {x: 0, y: 90, z: 90}
+  SpawnPoint: {x: -0.024, y: 0.004, z: 0.26099998}
+  SpawnRotation: {x: 0, y: 0, z: 12.058}
   ShootConfig: {fileID: 11400000, guid: 6287f06207c95544c9d4320ec3261c04, type: 2}
   TrailConfig: {fileID: 11400000, guid: fb4adb43a344c684e9b4eb407df17dae, type: 2}
+  _targetAimPosition: {x: 0.2677, y: -0.0826, z: -0.1013}
+  _targetAimRotation: {x: 22.12018, y: 83.45862, z: 270.73502}
+  _hintAimPosition: {x: -0.002, y: -0.404, z: -0.211}
+  _hintAimRotation: {x: 0, y: 0, z: 0}
+  _targetIdlePosition: {x: 0.24435963, y: -0.11439191, z: -0.06911434}
+  _targetIdleRotation: {x: 351.88312, y: 88.6898, z: 255.30765}
+  _hintIdlePosition: {x: 0.247, y: -0.479, z: -0.265}
+  _hintIdleRotation: {x: 0, y: 0, z: 0}

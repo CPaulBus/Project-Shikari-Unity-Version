@@ -5,6 +5,7 @@ using Cinemachine;
 using StarterAssets;
 using UnityEngine.InputSystem;
 using UnityEngine.Animations.Rigging;
+using System;
 
 public class ThirdPersonShooterController : MonoBehaviour
 {
@@ -18,26 +19,29 @@ public class ThirdPersonShooterController : MonoBehaviour
     [SerializeField] private Transform spawnBulletPosition;
     [SerializeField] private float _bulletSpeed;
     [SerializeField] private float _bulletDelay;
-    private bool _allowBulletSpawn = true;
 
     [Header("==Debug Mode==")]
-    [SerializeField] private bool _debugMode;
+    [SerializeField] public bool debugMode;
     [SerializeField] private Transform debugTransform;
-    private bool allowInvoke = true;
 
-    private List<RigLayer> rigs;
-    private float aimRigWeight;
+    [Header("==Player IK==")]
+    [SerializeField] private List<RigLayer> rigs;
+    [SerializeField] private PlayerIK _pIK;
 
     [Header("Weapon Equipped")]
-    [SerializeField] private bool _isRifleEquipped;
-    [SerializeField] private bool _isPistolEquipped;
     [SerializeField] private PlayerGunSelector GunSelector;
 
     private ThirdPersonController thirdPersonController;
     private StarterAssetsInputs starterAssetsInputs;
     private Animator _animator;
 
+    public static ThirdPersonShooterController instance;
+
+    private bool _isAiming;
+
     [SerializeField] private int playerID;
+
+    public Action OnSwitchWeaponEvent;
 
     private void Awake()
     {
@@ -46,49 +50,137 @@ public class ThirdPersonShooterController : MonoBehaviour
         _animator = GetComponent<Animator>();
         rigs = GetComponent<RigBuilder>().layers;
         GunSelector = GetComponent<PlayerGunSelector>();
+        _pIK = GetComponentInChildren<PlayerIK>();
+
+        aimVirtualCamera = GameObject.Find("PlayerAimCamera").GetComponent<CinemachineVirtualCamera>();
+
+        instance = this;
+    }
+
+    private void OnEnable()
+    {
+        OnSwitchWeaponEvent += IdleGunRig;
+    }
+
+    private void OnDisable()
+    {
+        OnSwitchWeaponEvent -= IdleGunRig;
     }
 
     private void Start()
     {
-        if (_debugMode)
+        if (debugMode)
         {
             debugTransform.gameObject.SetActive(true);
         }
         else
             debugTransform.gameObject.SetActive(false);
 
-        //spawnBulletPosition = GameObject.FindGameObjectWithTag("BulletSpawn").GetComponent<Transform>();
-
-        if (_isRifleEquipped)
+        foreach (RigLayer currRig in rigs)      //Checking if all rigs has greater than 0
         {
-            _animator.SetLayerWeight(0, 0f);
-            _animator.SetLayerWeight(1, 1f);
+            if (currRig.rig.weight > 0)
+                currRig.rig.weight = 0f;
+        }
+    }
+
+    private void IdleGunRig()
+    {
+        if (!_isAiming)
+        {
+            switch (GunSelector.ActiveGun.Type)
+            {
+                case GunType.SciFi:
+                    if (rigs[3].rig.weight != 0f) 
+                    {
+                        rigs[3].rig.weight = 0f;
+                    }
+
+                    rigs[1].rig.weight = 1f;
+                    rigs[0].rig.weight = 0f;
+                    break;
+
+                case GunType.Rifle:
+                    goto case GunType.SciFi;
+
+                case GunType.Pistol:
+                    if (rigs[1].rig.weight != 0f)
+                    {
+                        rigs[1].rig.weight = 0f;
+                    }
+
+                    rigs[3].rig.weight = 1f;
+                    rigs[2].rig.weight = 0f;
+                    break;
+                
+            }
         }
         else
         {
-            _animator.SetLayerWeight(1, 0f);
-            _animator.SetLayerWeight(0, 1f);
+            switch (GunSelector.ActiveGun.Type)
+            {
+                case GunType.SciFi:
+                    if (rigs[2].rig.weight != 0f)
+                    {
+                        rigs[2].rig.weight = 0f;
+                    }
+
+                    rigs[1].rig.weight = 0f;
+                    rigs[0].rig.weight = 1f;
+                    break;
+
+                case GunType.Rifle:
+                    goto case GunType.SciFi;
+
+                case GunType.Pistol:
+                    if (rigs[0].rig.weight != 0f)
+                    {
+                        rigs[0].rig.weight = 0f;
+                    }
+
+                    rigs[3].rig.weight = 0f;
+                    rigs[2].rig.weight = 1f;
+                    break;                
+            }
         }
+
+        _pIK.OnIKIdleAssignEvent?.Invoke();
+        _pIK.OnIKAimAssignEvent?.Invoke();
     }
 
     private void Update()
     {
         Vector3 mouseWorldPosition = MouseWorldFunction();
         AimFunction(mouseWorldPosition);
+    }
 
+    private void LateUpdate()
+    {
+        IdleGunRig();
+        AnimCheckFunc();    // Check Current Gun Type
+    }
 
-        if (_isRifleEquipped)
+    void AnimCheckFunc()
+    {
+        switch (GunSelector.ActiveGun.Type)
         {
-            rigs[0].rig.weight = Mathf.Lerp(rigs[0].rig.weight, aimRigWeight, Time.deltaTime * 20f);
-        }
+            case GunType.SciFi:
+                _animator.SetLayerWeight(1, Mathf.Lerp(_animator.GetLayerWeight(1), 1f, Time.deltaTime * 10f));
+                _animator.SetLayerWeight(3, Mathf.Lerp(_animator.GetLayerWeight(3), 0f, Time.deltaTime * 10f));
+                break;
 
-        if (_isPistolEquipped)
-        {
-            foreach(RigLayer currRig in rigs)
-            {
-                currRig.rig.weight = 0f;
-            }
+            case GunType.Pistol:
+                _animator.SetLayerWeight(3, Mathf.Lerp(_animator.GetLayerWeight(3), 1f, Time.deltaTime * 10f));
+                _animator.SetLayerWeight(1, Mathf.Lerp(_animator.GetLayerWeight(1), 0f, Time.deltaTime * 10f));
+                break;
+
+            case GunType.Rifle:
+                goto case GunType.SciFi;
         }
+    }
+
+    private IEnumerator delayFunc()
+    {
+        yield return new WaitForSeconds(0.5f);
     }
 
     private void AimFunction(Vector3 mouseWorldPosition)
@@ -99,9 +191,14 @@ public class ThirdPersonShooterController : MonoBehaviour
             AnimatorAimLayer(true);
             AimingFix(mouseWorldPosition);
             //ShootFunction(mouseWorldPosition); **Old Shoot Function
-            if(starterAssetsInputs.shoot && GunSelector.ActiveGun != null)
+            if(GunSelector.ActiveGun != null)
             {
-                GunSelector.ActiveGun.Shoot();
+                GunSelector.ActiveGun.Tick(starterAssetsInputs.shoot);
+
+                if (starterAssetsInputs.shoot)
+                {
+                    _animator.SetTrigger("Fire");
+                }
             }
         }
         else
@@ -115,19 +212,41 @@ public class ThirdPersonShooterController : MonoBehaviour
     {
         if (aimStart)
         {
-            if (_isRifleEquipped)
-                _animator.SetLayerWeight(2, Mathf.Lerp(_animator.GetLayerWeight(2), 1f, Time.deltaTime * 10f));
+            switch (GunSelector.ActiveGun.Type)
+            {
+                case GunType.SciFi:
+                    _animator.SetLayerWeight(2, Mathf.Lerp(_animator.GetLayerWeight(2), 1f, Time.deltaTime * 10f));
+                    _animator.SetLayerWeight(4, Mathf.Lerp(_animator.GetLayerWeight(4), 0f, Time.deltaTime * 10f));
 
-            if (_isPistolEquipped)
-                _animator.SetLayerWeight(3, Mathf.Lerp(_animator.GetLayerWeight(3), 1f, Time.deltaTime * 10f));
+                    rigs[0].rig.weight = Mathf.Lerp(rigs[0].rig.weight, 1f, Time.deltaTime * 20f);
+                    break;
+                case GunType.Pistol:
+                    _animator.SetLayerWeight(4, Mathf.Lerp(_animator.GetLayerWeight(4), 1f, Time.deltaTime * 10f));
+                    _animator.SetLayerWeight(2, Mathf.Lerp(_animator.GetLayerWeight(2), 0f, Time.deltaTime * 10f));
+
+                    rigs[2].rig.weight = Mathf.Lerp(rigs[2].rig.weight, 1f, Time.deltaTime * 20f);
+                    break;
+
+                case GunType.Rifle:
+                    goto case GunType.SciFi;
+            }                
         }
         else
         {
-            if (_isRifleEquipped)
-                _animator.SetLayerWeight(2, Mathf.Lerp(_animator.GetLayerWeight(2), 0f, Time.deltaTime * 10f));
+            switch (GunSelector.ActiveGun.Type)
+            {
+                case GunType.SciFi:
+                    _animator.SetLayerWeight(2, Mathf.Lerp(_animator.GetLayerWeight(2), 0f, Time.deltaTime * 10f));
+                    rigs[0].rig.weight = Mathf.Lerp(rigs[0].rig.weight, 0f, Time.deltaTime * 20f);
+                    break;
+                case GunType.Pistol:
+                    _animator.SetLayerWeight(4, Mathf.Lerp(_animator.GetLayerWeight(4), 0f, Time.deltaTime * 10f));
+                    rigs[2].rig.weight = Mathf.Lerp(rigs[2].rig.weight, 0f, Time.deltaTime * 20f);
+                    break;
 
-            if (_isPistolEquipped)
-                _animator.SetLayerWeight(3, Mathf.Lerp(_animator.GetLayerWeight(3), 0f, Time.deltaTime * 10f));
+                case GunType.Rifle:
+                    goto case GunType.SciFi;
+            }
         }
         
     }
@@ -159,31 +278,13 @@ public class ThirdPersonShooterController : MonoBehaviour
         return mouseWorldPosition;
     }
 
-    private void ShootFunction(Vector3 mouseWorldPosition)
-    {
-        if (starterAssetsInputs.shoot && _allowBulletSpawn)
-        {
-            Vector3 aimDir = (mouseWorldPosition - spawnBulletPosition.position).normalized;
-            Instantiate(pfBulletParticle, spawnBulletPosition.position, Quaternion.LookRotation(aimDir, Vector3.up));
-            _allowBulletSpawn = false;
-            _animator.SetTrigger("Fire");
-
-            if (allowInvoke)
-            {
-                Invoke("BulletReset", _bulletDelay);
-                allowInvoke = false;
-            }
-        }
-    }
-
     private void OnAimFinished()
     {
         aimVirtualCamera.gameObject.SetActive(false);
         thirdPersonController.SetSensitivity(normalSensitivity);
         thirdPersonController.SetRotateOnMove(true);
 
-        if(_isRifleEquipped)
-            aimRigWeight = 0f;
+        _isAiming = false;
     }
 
     private void OnAimStarted()
@@ -192,13 +293,8 @@ public class ThirdPersonShooterController : MonoBehaviour
         thirdPersonController.SetSensitivity(aimSensitivity);
         thirdPersonController.SetRotateOnMove(false);
 
-        if (_isRifleEquipped)
-            aimRigWeight = 1f;
-    }
+        _pIK.OnIKAimAssignEvent?.Invoke();
 
-    void BulletReset()
-    {
-        _allowBulletSpawn = true;
-        allowInvoke = true;
+        _isAiming = true;
     }
 }
