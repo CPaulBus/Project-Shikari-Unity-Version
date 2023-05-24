@@ -11,9 +11,9 @@ public class PlayerCharacterSO : ScriptableObject
     public float Armor;
     public float MaxArmor;
 
-    //public int Level;
-    //public float experience;
-    //public float maxExperience;
+    public int Level;
+    public float experience;
+    public float maxExperience;
 
     public GameObject ModelPrefab;
     private GameObject Model;
