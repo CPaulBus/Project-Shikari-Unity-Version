@@ -27,18 +27,6 @@ public class GunScriptableObject : ScriptableObject
     private ParticleSystem ShootSystem;
     private ObjectPool<TrailRenderer> TrailPool;
 
-    [Header("Player IK Aim Rig")]
-    public Vector3 _targetAimPosition;
-    public Vector3 _targetAimRotation;
-    public Vector3 _hintAimPosition;
-    public Vector3 _hintAimRotation;
-
-    [Header("Player IK Idle Rig")]
-    public Vector3 _targetIdlePosition;
-    public Vector3 _targetIdleRotation;
-    public Vector3 _hintIdlePosition;
-    public Vector3 _hintIdleRotation;
-
     public void Spawn(Transform Parent, MonoBehaviour ActiveMonoBehaviour)
     {
         this.ActiveMonoBehaviour = ActiveMonoBehaviour;
