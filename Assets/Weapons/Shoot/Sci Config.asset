@@ -14,6 +14,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   HitMask:
     serializedVersion: 2
-    m_Bits: 1
-  Spread: {x: 0.03, y: 0.03, z: 0.03}
+    m_Bits: 129
   FireRate: 0.17
+  RecoilRecoverySpeed: 1
+  MaxSpreadTime: 1
+  SpreadType: 1
+  Spread: {x: 0.03, y: 0.03, z: 0.03}
+  SpreadMultiplier: 0.1
+  SpreadTexture: {fileID: 0}

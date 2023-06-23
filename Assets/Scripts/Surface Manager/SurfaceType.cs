@@ -5,6 +5,6 @@ using UnityEngine;
 [System.Serializable]
 public class SurfaceType
 {
-    public Texture Abledo;
-    public SurfaceType Surface;
+    public Texture Albedo;
+    public Surface Surface;
 }

@@ -7,8 +7,6 @@ using UnityEngine;
 public class Surface : ScriptableObject
 {
     [Serializable]
-
-
     public class SurfaceImpactTypeEffect
     {
         public ImpactType ImpactType;
